@@ -1,10 +1,4 @@
-# BibApp Konkurrencebidrag
-## Forside
-![](screen-hand.jpg)
-
-
-BibApp - inspirationsværktøj
-Projektbeskrivelse
+<img src="screen-hand.jpg" style='height:24rem;float:left'><h1 style=clear:none><br>BibApp</h1><h2 style=clear:none>inspirationsværktøj</h2>
 
 BibApp er et inspirationsværktøj, der hjælper brugeren med at finde bøger der ligner.. 
 Princippet er at man har nogle bøger i forgrunden, og disse er grundlaget for bøger vist i baggrunden. En bog kan trækkes fra baggrunden og erstatte en bog i forgrunden, - og derved finde nye bøger til baggrunden.
@@ -12,19 +6,21 @@ Princippet er at man har nogle bøger i forgrunden, og disse er grundlaget for b
 
 Den opfylder bedømmelseskriterierne:
 
-- _Realiserbar:_ kørende prototype er realiseret
-- _Værdiskabende for biblioteker og biblioteksbrugere:_ hjælper med at finde relaterede bøger, og inspirerer, hvilket et område hvor der mangler digitale redskaber.
-- _Brugervenlig og visuelt appellerende:_ interaktionen er designet til at være enkel og let at bruge, baseret på brugerfeedback. Typiske kommentarer fra brugertest er: "den er cool", "Charmerende, lettilgængelig, overskuelig vej til informationer", "begejstringen over det visuelt flotte".
-- _Bruger kulturdata:_ bygger på DBCs bibliografiske data, ADHL-datasæt, samt bogforsider. Den beriger desuden ADHL-data gennem anbefalingsservice og eigenvektoranalyse.
-- _Er på dansk:_ ja.
-- _Kan bruges efter konkurrencen:_ prototypen skal poleres før den er produktionsklar, men den er enkel at udvide så den udover at distribures som mobilapp, også kan optimeres til tablets og bibliotekernes touch-infoskærme, og indlejres som widget i DDB-CMS og bibliotek.dk
+- *Realiserbar:* kørende prototype er realiseret
+- *Værdiskabende for biblioteker og biblioteksbrugere:* hjælper med at finde relaterede bøger, og inspirerer, hvilket et område hvor der mangler digitale redskaber.
+- *Brugervenlig og visuelt appellerende:* interaktionen er designet til at være enkel og let at bruge, baseret på brugerfeedback. Typiske kommentarer fra brugertest er: "den er cool", "Charmerende, lettilgængelig, overskuelig vej til informationer", "begejstringen over det visuelt flotte".
+- *Bruger kulturdata:* bygger på DBCs bibliografiske data, ADHL-datasæt, samt bogforsider. Den beriger desuden ADHL-data gennem anbefalingsservice og eigenvektoranalyse.
+- *Er på dansk:* ja.
+- *Kan bruges efter konkurrencen:* prototypen skal poleres før den er produktionsklar, men den er enkel at udvide så den udover at distribures som mobilapp, også kan optimeres til tablets og bibliotekernes touch-infoskærme, og indlejres som widget i DDB-CMS og bibliotek.dk
 
 TODO De følgende afsnit går mere i dybden: 1) formål, og intro til kørende prototype. 2)
 
 
-![](screen4x.jpg)
+<div style=page-break-before:always></div>
 
-## Idé og prototype
+<img src="screen4x.jpg" style='width:100%'>
+
+<!-- # Idé og prototype  -->
 
 Idéen er at skabe et redskab til at gå på opdagelse i bibliotekets materialer:
 
@@ -46,14 +42,16 @@ Prototypen er designet til mobiltelefon-format, og kan prøves i webbrowsere, in
 - Android app(unsigned): http://solsort.com/apps/bibapp/bibapp.apk
 
 
-## Interaktion og grænseflade
+<div style=page-break-before:always></div>
 
-![](screen1.jpg) ![](screen2.jpg)
+# Interaktion og grænseflade
 
+<img class=im src=screen1.jpg> <img class=im src=screen2.jpg> 
 Søgning give overblik over materialer, og når du klikker på et element vises overlay med materialeinfo.
 
-![](screen3.jpg) ![](screen4.jpg)
+<div style="clear:both"></div>
 
+<img class=im src=screen3.jpg> <img class=im src=screen4.jpg>
 Du kan trække elementer fra baggrund til forgrund, hvorefter der kommer nye relaterede materialer i baggrunden.
 
 ----
@@ -63,16 +61,21 @@ Idéen om at fokusere på visning af forsider, og at interaktionen foregår ved 
 Materialevisningen, layout/placering af forsider, og vejledning omkring at trække bøger fra baggrund til forgrund, er resultat på brugerstudier med første udgave af prototypen.
 
 
-## Næste trin
+<div style=page-break-before:always></div>
+# Næste trin
 
-## Brugerfeedback
+<div style=page-break-before:always></div>
+# Brugerfeedback
 
-## Data
+<div style=page-break-before:always></div>
+# Data
 
 Prototypen - status / begrænsninger / brugerstudier / teknik
 
 Datakilder - liste af datakilder, vægtning af anbefalinger, eigenvektoranalyse som afstandsmål
 
+<div style=page-break-before:always></div>
+<div style=page-break-before:always></div>
 #
 
 ----
