@@ -1,4 +1,4 @@
-<img src="screen-hand.jpg" style='height:24rem;float:left'><h1 style=clear:none><br>BibApp</h1><h2 style=clear:none>inspirationsværktøj</h2>
+<img src="screen-hand.jpg" style='height:24rem;float:left'><h1 style=clear:none><br>BibApp</h1><h2 style=clear:none>- inspirationsværktøj</h2>
 
 BibApp er et inspirationsværktøj, der hjælper brugeren med at finde bøger der ligner.. 
 Princippet er at man har nogle bøger i forgrunden, og disse er grundlaget for bøger vist i baggrunden. En bog kan trækkes fra baggrunden og erstatte en bog i forgrunden, - og derved finde nye bøger til baggrunden.
@@ -8,7 +8,7 @@ Den opfylder bedømmelseskriterierne:
 
 - *Realiserbar:* kørende prototype er realiseret
 - *Værdiskabende for biblioteker og biblioteksbrugere:* hjælper med at finde relaterede bøger, og inspirerer, hvilket et område hvor der mangler digitale redskaber.
-- *Brugervenlig og visuelt appellerende:* interaktionen er designet til at være enkel og let at bruge, baseret på brugerfeedback. Typiske kommentarer fra brugertest er: "den er cool", "Charmerende, lettilgængelig, overskuelig vej til informationer", "begejstringen over det visuelt flotte".
+- *Brugervenlig og visuelt appellerende:* interaktionen er designet til at være enkel og let at bruge, baseret på brugerfeedback. Kommentarer fra brugertest er: "den er cool", "Charmerende, lettilgængelig, overskuelig vej til informationer", "begejstringen over det visuelt flotte".
 - *Bruger kulturdata:* bygger på DBCs bibliografiske data, ADHL-datasæt, samt bogforsider. Den beriger desuden ADHL-data gennem anbefalingsservice og eigenvektoranalyse.
 - *Er på dansk:* ja.
 - *Kan bruges efter konkurrencen:* prototypen skal poleres før den er produktionsklar, men den er enkel at udvide så den udover at distribures som mobilapp, også kan optimeres til tablets og bibliotekernes touch-infoskærme, og indlejres som widget i DDB-CMS og bibliotek.dk
@@ -38,55 +38,48 @@ Derfor har jeg en lavet app-prototype, der kommer med automatiske anbefalinger o
 
 Prototypen er designet til mobiltelefon-format, og kan prøves i webbrowsere, installeres som app på Android-telefoner, - og som web-app på iPhone hvis du vælger "Add to Home Screen"/"Føj til hjemmeskærm". Da det er en tidlig prototype, er den langsom, virker ikke på alle modeller, og har stadig en del skønhedsfejl, men den grundlæggende interaktion og visualisering er implementeret.
 
-- Webapp: http://solsort.com/apps/bibapp/
-- Android app(unsigned): http://solsort.com/apps/bibapp/bibapp.apk
+- Webapp: <a href=http://solsort.com/apps/bibapp/>solsort.com/apps/bibapp/</a>
+- Android app(unsigned): <a href=http://solsort.com/apps/bibapp/bibapp.apk>solsort.com/apps/bibapp/bibapp.apk</a>
 
 
 <div style=page-break-before:always></div>
 
 # Interaktion og grænseflade
 
-<img class=im src=screen1.jpg> <img class=im src=screen2.jpg> 
+<img class=im src=screen1.jpg> <img class=im src=screen2.jpg>  <br><br><br><br>
 Søgning give overblik over materialer, og når du klikker på et element vises overlay med materialeinfo.
 
 <div style="clear:both"></div>
 
-<img class=im src=screen3.jpg> <img class=im src=screen4.jpg>
+<img class=im src=screen3.jpg> <img class=im src=screen4.jpg> <br><br><br><br>
 Du kan trække elementer fra baggrund til forgrund, hvorefter der kommer nye relaterede materialer i baggrunden.
 
-----
+<div style="clear:both"></div>
 
 Idéen om at fokusere på visning af forsider, og at interaktionen foregår ved at trække bøgerne rundt på skærmen med touch, er inspireret af erfaringer/brugerfeedback i forbindelse med projektet "visualisering af relationer" ().
 
 Materialevisningen, layout/placering af forsider, og vejledning omkring at trække bøger fra baggrund til forgrund, er resultat på brugerstudier med første udgave af prototypen.
 
 
-<div style=page-break-before:always></div>
-# Næste trin
 
 <div style=page-break-before:always></div>
-# Brugerfeedback
-
-<div style=page-break-before:always></div>
-# Data
+# Datakilder
 
 Prototypen - status / begrænsninger / brugerstudier / teknik
 
 Datakilder - liste af datakilder, vægtning af anbefalinger, eigenvektoranalyse som afstandsmål
 
 <div style=page-break-before:always></div>
-<div style=page-break-before:always></div>
-#
 
-----
+# Næste trin
 
-----
+[...]
 
-----
+# Brugerfeedback
 
-----
-
-----
+[...]
+<!--
+# Brugerfeedback
 
 # Noter
 
@@ -188,3 +181,4 @@ i løbet af den forgangne måned har jeg fået en proof-of-concept prototype op 
 
 Højtlæsning use case som en rød tråd
 
+-->
