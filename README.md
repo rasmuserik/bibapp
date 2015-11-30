@@ -1,6 +1,6 @@
-<img src="screen-hand.jpg" style='height:24rem;float:left'><h1 style=clear:none><br>BibApp</h1><h2 style=clear:none>- inspirationsværktøj</h2>
+<img src="screen-hand.jpg" style='height:28rem;float:left'><h1 style=clear:none>BibApp</h1><h2 style=clear:none>- inspirationsværktøj</h2>
 
-BibApp er et inspirationsværktøj, der hjælper brugeren med at finde bøger der ligner.. 
+BibApp er et inspirationsværktøj, der hjælper brugeren med at finde relaterede bøger. 
 Princippet er at man har nogle bøger i forgrunden, og disse er grundlaget for bøger vist i baggrunden. En bog kan trækkes fra baggrunden og erstatte en bog i forgrunden, - og derved finde nye bøger til baggrunden.
 
 
@@ -50,68 +50,90 @@ Prototypen er designet til mobiltelefon-format, og kan prøves i webbrowsere, in
 
 # Interaktion og grænseflade
 
-<img class=im src=screen1.jpg> <img class=im src=screen2.jpg>  <br><br><br><br>
-Søgning give overblik over materialer, og når du klikker på et element vises overlay med materialeinfo.
+<img class=im src=screen1.jpg> <img class=im src=screen2.jpg>  <br><br>
+Søgning giver overblik over materialer, og når du klikker på et element vises overlay med materialeinfo.
+
+Her ser vi et klik på en bog i baggrunden, hvorefter mere info kommer frem.
 
 <div style="clear:both"></div>
 
-<img class=im src=screen3.jpg> <img class=im src=screen4.jpg> <br><br><br><br>
+<img class=im src=screen3.jpg> <img class=im src=screen4.jpg> <br><br>
 Du kan trække elementer fra baggrund til forgrund, hvorefter der kommer nye relaterede materialer i baggrunden.
 
+Her ser vi "Otto er et næsehorn" blive trukket fra baggrund til forgrund, hvorefter Hakkebakkeskoven, Gummi-Tarzan, etc., dukker op som nye anbefalinger i baggrunden.
+
 <div style="clear:both"></div>
 
-Idéen om at fokusere på visning af forsider, og at interaktionen foregår ved at trække bøgerne rundt på skærmen med touch, er inspireret af erfaringer / brugerfeedback i forbindelse med projektet "visualisering af relationer".
+Visningen gør stor brug af forsider, hvilket gør det visuelt inspirerende. 
+Interaktionen er at trække i materialer, hvilket er naturligt på touch-devices.
+Dette bygger på erfaringer fra "Visualisering af relationer"-DDB-CMS-widget.
 
-Materialevisningen, layout/placering af forsider, og vejledning omkring at trække bøger fra baggrund til forgrund, er resultat på brugerstudier med første udgave af prototypen.
-
+Det nuværende layout er resultatet af brugerstudier og feedback på de første udgaver af prototypen.
 
 
 <div style=page-break-before:always></div>
-# Brugerfeedback
 
-[...]
+# Data
 
-# Datakilder
 
-Prototypen - status / begrænsninger / brugerstudier / teknik
+I forbindelse med udviklingen af app'en har jeg brugt: 1) ADHL og biblio&shy;grafiske data fra DBCs hjemmeside. 2) Links til forsidebilleder fra bogpriser.dk. 3) Jsonp-enabled DDB-CMS api ovenpå brønden via dev.vejlebib.dk.
 
-Datakilder - liste af datakilder, vægtning af anbefalinger, eigenvektoranalyse som afstandsmål
+De bibliografiske poster har jeg beriget med anbefalinger og en vektor der kan bruges til afstandsmål mellem materialer. Begge dele er udregnet fra ADHL-datasættet:
+
+*Anbefalingerne* svarer til ADHL-servicen tilføjet en vægtning, som korrigerer for at populære materialer ikke bliver overrepræsenteret. Dette giver bedre og mere relevante resultater.
+
+*Afstandsmål* mellem materialer skabes ved at materialerne projiceres ind i det rum som de (200) mest betydende ADHL-eigenvektorer udspænder. Det kan bruges blandt andet bruges til: at finde materialer der ligger imellem andre materialer, at lave klyngeanalyse af materialer, og at bestemme placering af materialer ved visualisering. På grund af tidsbegrænsning er ikke kommet med i prototypen endnu, men det har spændende perspektiver.
+
+# Teknik
+
+Prototypen er udviklet i HTML5 ovenpå react/reagent/re-frame i ClojureScript. 
+<br><span style="font-size:75%">`github.com/rasmuserik/solsort-util/blob/master/src/solsort/apps/bib.cljs`</span>
+<br> Databehandling bruger Python, LevelDB og Gensim. 
+<br><span style="font-size:75%">`github.com/rasmuserik/bib-data`
+</span>
+<br> Søgemaskine og online database kører via ElasticSearch og CouchDB.
+<br> Mobilapp via Apache Cordova. 
+<span style="font-size:75%">`github.com/rasmuserik/bibapp-cordova`</span>
+
+
 
 <div style=page-break-before:always></div>
 
 # Videreudvikling - næste trin
 
 
-Hvis jeg får lejlighed til at bygge videre på app'en og gøre den produktions&shy;klar, så er dette min backlog over ting der kan gøres endnu bedre:
+Hvis jeg får lejlighed til at bygge videre på app'en og gøre den produktions&shy;klar, så vil følgende ting kunne gøre den endnu bedre:
 
-<table style="width:100%; font-size: 1.2rem"><tr><td width=48% valign=top>
+<table style="width:100%; font-size: 1.3rem"><tr><td width=48% valign=top>
 
-Autogenerér forsider ud fra metadata for de materialer som ikke har forsider 
+Autogenerede forsider ud fra metadata for de materialer som ikke har forsider.
 
-Basér anbefalingerne på flere forgrunds\-elementer, i stedet for kun det allernærmeste.
-Dette kan gøres ved at interpolere baggrunds\-elementernes koordinater i eigenvektor&shy;rummet, evt. tilføjet deterministisk støj, og bruge disse til at finde biblioteksmaterialet. Inkludere udvikling af webservice for søgning i eigenvektorrummet, hvilket er implementerbart med fornuftig performance.
+Bedre anbefalingerne baseret på flere forgrunds&shy;elementer, i stedet for kun det allernærmeste.
+Eksempelvis ved at interpolere baggrunds&shy;elementernes koordinater i eigenvektor&shy;rummet og bruge disse til at finde biblioteksmaterialet. Dette forud&shy;sætter udvikling af webservice for søgning i eigen&shy;vektor&shy;rummet.
 
-Performanceoptimeret klient, - nuværende udgave er uoptimeret, hvilket er mærkbart. Dette kan forbedres ved at optimere brugen af react i applikationen
+Performanceoptimering af klienten. Den nuværende udgave er uoptimeret, hvilket er mærkbart.
 
-Produktionswebservices hos DBC, frem for diverse hacks. Dette kræver CORS-understøttelse og diverse andre forbedringer af webservices
+Produktionswebservices hos DBC, frem for diverse hacks. Dette kræver CORS-understøttelse og diverse andre forbedringer af webservices.
+
+Udvid afstandsmålet mellem materialer til ikke kun at være baseret på ADHL. Eigenvektor&shy;analyse af metadata er naturligt at tilføje.
+
+Flere brugerstudier, og videreudvikling af app ud fra disse.
 
 </td><td width=4%>&nbsp;</td><td width=48% valign=top>
 
-Layout for tablets, touch-storskærme og widgets. Løses bedst ved dynamisk layout.
+Layout for tablets, touch-storskærme og widgets. Løses bedst ved dynamisk udregnet layout.
 
-Eventuelt indlejring som inspirationsværktøj i DDB-CMS og bibliotek.dk
+Eventuelt indlejring som inspirations&shy;værktøj i bibliotek.dk og DDB-CMS.
 
 Deploy og publicér på app-markeder for Android og iOS, samt evt. Windows Phone, Blackberry, Amazon, og FirefoxOS.
 
-Flere brugertest, og forbedring af app ud fra disse
+Animationer i brugergrænsfladen vil gøre den mere intuitiv: det vil gøre det tydeligere at man kan trække elemen&shy;terne, og hvad der sker når man søger, bytter om på forgrundselementer, etc.
 
-Gør brugergrænsefladen endnu mere intuitive via animationer der understøtter hvad der sker, ie. det vil gøre det tydeligere at man kan trække elementerne, og hvad der sker når man søger, bytter om på forgrundselementer, etc.
+Konfigurebar anbefalings-præcisionen.
 
-Eventuelt mulighed for at tilpasse anbefalings-præcisionen
+Mulighed for at gemme materialer.
 
-Eventuelt mulighed for at gemme materialer
-
-Bulk-webservices for performance, - visning af 84 elementer på skærmen, leder til 168 http-requests (1 per metadata + 1 per cover image), hvilket er en flaskehals i performance, da browsere typiske er begrænset til 2-8 simultane requests. Services hvor man kan bulk-forespørge til flere elementer på én gang vil løse dette
+Bulk-webservices for performance. Der er mange http-forespørgsler, hvilket er en flaskehals i performance. Dette kan forbedres med webservice der giver info ome flere elementer.
 
 </tr></table>
 
