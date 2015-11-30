@@ -13,22 +13,26 @@ Den opfylder bedømmelseskriterierne:
 - *Er på dansk:* ja.
 - *Kan bruges efter konkurrencen:* prototypen skal poleres før den er produktionsklar, men den er enkel at udvide så den udover at distribures som mobilapp, også kan optimeres til tablets og bibliotekernes touch-infoskærme, og indlejres som widget i DDB-CMS og bibliotek.dk
 
-TODO De følgende afsnit går mere i dybden: 1) formål, og intro til kørende prototype. 2)
+De følgende sider går mere i detaljer med: formål, kørende prototype, 
+Baggrund, kørende prototype, brugerstudier, data, og næste trin mod at få den i produktion.
+<!-- TODO De følgende afsnit går mere i dybden: 1) formål, og intro til kørende prototype. 2) -->
 
 
 <div style=page-break-before:always></div>
 
 <img src="screen4x.jpg" style='width:100%'>
 
-<!-- # Idé og prototype  -->
+<!-- 
+# Idé og prototype  
+-->
 
-Idéen er at skabe et redskab til at gå på opdagelse i bibliotekets materialer:
+Formålet er at skabe et redskab til at gå på opdagelse i bibliotekets materialer:
 
 - Ifølge bibliotekarer er der et uopfyldt behov for digitale inspirationsværktøj.
 - Biblioteksbrugere melder ud at det gerne vil finde lignende bøge, eksempelvis romaner inden for samme "genre".
 - Konkret har jeg den personlige use-case, at jeg gerne vil finde gode bøger at læse højt for min søn.
 
-Derfor har jeg en lavet app-prototype, der kommer med automatiske anbefalinger og inspiration, ud fra bøger som man udvælger. Dette kan ses herover, hvor:
+Derfor har jeg en lavet app-prototype, der kommer med automatiske anbefalinger og inspiration, ud fra bøger som man vælger. Dette ses herover:
 
 - "Turen går til..." inspirerer til "Lonely Planet" og lignende rejseguider
 - "Pippi Langstrømpe" inspirerer til "Cirkeline", "Mumitroldende", "Alfons Åberg", "Emil fra Lønneberg", "Rasmus Klump", "Peter Pedal", "Babapappa", "Hodja fra Pjort",  og andre højtlæsningsbøger
@@ -56,13 +60,17 @@ Du kan trække elementer fra baggrund til forgrund, hvorefter der kommer nye rel
 
 <div style="clear:both"></div>
 
-Idéen om at fokusere på visning af forsider, og at interaktionen foregår ved at trække bøgerne rundt på skærmen med touch, er inspireret af erfaringer/brugerfeedback i forbindelse med projektet "visualisering af relationer" ().
+Idéen om at fokusere på visning af forsider, og at interaktionen foregår ved at trække bøgerne rundt på skærmen med touch, er inspireret af erfaringer / brugerfeedback i forbindelse med projektet "visualisering af relationer".
 
 Materialevisningen, layout/placering af forsider, og vejledning omkring at trække bøger fra baggrund til forgrund, er resultat på brugerstudier med første udgave af prototypen.
 
 
 
 <div style=page-break-before:always></div>
+# Brugerfeedback
+
+[...]
+
 # Datakilder
 
 Prototypen - status / begrænsninger / brugerstudier / teknik
@@ -71,16 +79,43 @@ Datakilder - liste af datakilder, vægtning af anbefalinger, eigenvektoranalyse 
 
 <div style=page-break-before:always></div>
 
-# Næste trin
+# Videreudvikling - næste trin
 
-[...]
 
-# Brugerfeedback
+Hvis jeg får lejlighed til at bygge videre på app'en og gøre den produktions&shy;klar, så er dette min backlog over ting der kan gøres endnu bedre:
 
-[...]
+<table style="width:100%; font-size: 1.2rem"><tr><td width=48% valign=top>
+
+Autogenerér forsider ud fra metadata for de materialer som ikke har forsider 
+
+Basér anbefalingerne på flere forgrunds\-elementer, i stedet for kun det allernærmeste.
+Dette kan gøres ved at interpolere baggrunds\-elementernes koordinater i eigenvektor&shy;rummet, evt. tilføjet deterministisk støj, og bruge disse til at finde biblioteksmaterialet. Inkludere udvikling af webservice for søgning i eigenvektorrummet, hvilket er implementerbart med fornuftig performance.
+
+Performanceoptimeret klient, - nuværende udgave er uoptimeret, hvilket er mærkbart. Dette kan forbedres ved at optimere brugen af react i applikationen
+
+Produktionswebservices hos DBC, frem for diverse hacks. Dette kræver CORS-understøttelse og diverse andre forbedringer af webservices
+
+</td><td width=4%>&nbsp;</td><td width=48% valign=top>
+
+Layout for tablets, touch-storskærme og widgets. Løses bedst ved dynamisk layout.
+
+Eventuelt indlejring som inspirationsværktøj i DDB-CMS og bibliotek.dk
+
+Deploy og publicér på app-markeder for Android og iOS, samt evt. Windows Phone, Blackberry, Amazon, og FirefoxOS.
+
+Flere brugertest, og forbedring af app ud fra disse
+
+Gør brugergrænsefladen endnu mere intuitive via animationer der understøtter hvad der sker, ie. det vil gøre det tydeligere at man kan trække elementerne, og hvad der sker når man søger, bytter om på forgrundselementer, etc.
+
+Eventuelt mulighed for at tilpasse anbefalings-præcisionen
+
+Eventuelt mulighed for at gemme materialer
+
+Bulk-webservices for performance, - visning af 84 elementer på skærmen, leder til 168 http-requests (1 per metadata + 1 per cover image), hvilket er en flaskehals i performance, da browsere typiske er begrænset til 2-8 simultane requests. Services hvor man kan bulk-forespørge til flere elementer på én gang vil løse dette
+
+</tr></table>
+
 <!--
-# Brugerfeedback
-
 # Noter
 
 Vægt:
