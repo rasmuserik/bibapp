@@ -56,7 +56,7 @@ Det er en tidlig prototype, så den er kun designet til mobilt portrætformat, d
 # Interaktion og grænseflade
 
 <img class=im src=screen1.jpg> <img class=im src=screen2.jpg>  <br><br>
-Materialevisningen giver overblik med forsider, og klik på element viser overlay med materialeinfo.
+BibApp giver overblik med forsider, og klik på element viser overlay med materialevisning.
 
 Her ser vi et klik på en bog i baggrunden, hvorefter mere info kommer frem.
 
@@ -84,10 +84,10 @@ Datakilder som er brugt under app-udviklingen er: 1) ADHL og biblio&shy;grafiske
 
 De bibliografiske poster har jeg beriget med anbefalinger og en vektor, der kan bruges til afstandsmål mellem materialer. Begge dele er udregnet fra ADHL-datasættet:
 
-*Anbefalingerne* svarer til ADHL-servicen tilføjet en vægtning, som korrigerer for, at populære materialer ikke bliver overrepræsenteret. Dette giver bedre og mere relevante resultater.
+*Anbefalingerne* svarer til ADHL-servicen tilføjet en vægtning, som korrigerer, således at populære materialer ikke bliver overrepræsenteret. Dette giver bedre og mere relevante resultater.
 
 *Afstandsmål* mellem materialer skabes ved, at materialerne projiceres ind i det rum, som de (200) mest betydende ADHL-eigenvektorer udspænder. Det kan blandt andet bruges til: at finde materialer der ligger imellem andre materialer, at lave klyngeanalyse af materialer, og at bestemme placering af materialer ved visualisering. 
-På grund af tidsbegrænsning indeholder prototypen ikke dette endnu, men det har spændende perspektiver.
+På grund af tidsbegrænsning anvender app'en ikke dette endnu, men det har spændende perspektiver.
 
 # Teknik
 
@@ -121,7 +121,7 @@ Når der kommer lejlighed til at bygge videre på app'en og gøre den produktion
 
 <table style="width:100%; font-size: 1.3rem"><tr><td width=48% valign=top>
 
-Autogenerede forsider ud fra metadata for de materialer, som ikke har forsider.
+Autogenererede forsider ud fra metadata for de materialer, som ikke har forsider.
 
 Bedre anbefalingerne baseret på flere forgrunds&shy;elementer, i stedet for kun det allernærmeste.
 Eksempelvis ved at interpolere baggrunds&shy;elementernes koordinater i eigenvektor&shy;rummet og bruge disse til at finde biblioteksmaterialet. Dette forud&shy;sætter udvikling af webservice for søgning i eigen&shy;vektor&shy;rummet.
@@ -157,8 +157,8 @@ Tydeligere feedback ved søgning.
 <br>
 
 
-BibApp har potentiale: både som app, og indlejret i andre systemer. <br>
-Jeg håber at der er interesse for at få den i drift, og vil med glæde <br> videreudvikle den, hvis der er behov for dette,
+BibApp har potentiale: både som app og indlejret i andre systemer. <br>
+Jeg håber, at der er interesse for at få den i drift, og vil med glæde <br> videreudvikle den, hvis der er behov for dette,
 
 
 <img src=solsort.svg style="float:right; width:8rem">
