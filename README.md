@@ -133,7 +133,7 @@ Konfigurebar anbefalings-præcisionen.
 
 Mulighed for at gemme materialer.
 
-Bulk-webservices for performance. Der er mange http-forespørgsler, hvilket er en flaskehals i performance. Dette kan forbedres med webservice der giver info ome flere elementer.
+Bulk-webservices for performance. Der er mange http-forespørgsler, hvilket er en flaskehals i performance. Dette kan forbedres med webservice der giver info om flere elementer.
 
 </tr></table>
 
