@@ -13,7 +13,7 @@ BibApp opfylder bedømmelseskriterierne:
 - *Realiserbar:* kørende prototype er realiseret.
 - *Værdiskabende for biblioteker og biblioteksbrugere:* den hjælper med at finde relaterede bøger, og inspirerer. Dette er et område, der mangler digitale redskaber.
 - *Brugervenlig og visuelt appellerende:* interaktionen er designet til at være enkel og let at bruge, baseret på brugerfeedback. Kommentarer fra brugertest er: "den er cool", "Charmerende, lettilgængelig, overskuelig vej til informationer", "begejstringen over det visuelt flotte".
-- *Bruger kulturdata:* bygger på DBCs bibliografiske data, ADHL-datasæt, samt bogforsider. Den beriger desuden ADHL-data gennem anbefalingsservice og eigenvektoranalyse.
+- *Bruger kulturdata:* bygger på DBCs bibliografiske data, ADHL-datasæt, samt bogforsider. Den beriger desuden ADHL-data med anbefalings&shy;service og eigenvektoranalyse.
 - *Er på dansk:* ja.
 - *Kan bruges efter konkurrencen:* Prototypen kan videreudvikles og distribueres: som mobil-app, som tablet-app, som applikation til touch-infoskærme, og som widget, der indlejres i DDB-CMS eller bibliotek.dk
 
@@ -80,7 +80,7 @@ Det nuværende layout er resultatet af brugerstudier og feedback på de første 
 
 # Data
 
-Datakilder som er brugt under app-udviklingen er: 1) ADHL og biblio&shy;grafiske data fra DBCs hjemmeside. 2) Links til forsidebilleder fra bogpriser.dk. <br>3) Jsonp-enabled DDB-CMS API ovenpå brønden via dev.vejlebib.dk.
+Datakilder som er brugt under app-udviklingen er: 1) ADHL og biblio&shy;grafiske data fra DBCs hjemmeside. 2) Links til forsidebilleder fra bogpriser.dk. <br>3) JSONP-enabled DDB-CMS API ovenpå brønden via dev.vejlebib.dk.
 
 De bibliografiske poster har jeg beriget med anbefalinger og en vektor, der kan bruges til afstandsmål mellem materialer. Begge dele er udregnet fra ADHL-datasættet:
 
@@ -146,9 +146,12 @@ Animationer i brugergrænsefladen vil gøre den endnu mere intuitiv: det vil gø
 
 Konfigurerbar anbefalings&shy;præcision.
 
+Tilføj scrolling til materialevisning.
+
 Mulighed for at gemme materialer.
 
 Bulk-webservice for performance. Der er mange http-forespørgsler, hvilket er en flaskehals i performance. Dette kan forbedres med webservice, der giver info om flere elementer.
+
 
 Tydeligere feedback ved søgning.
 
