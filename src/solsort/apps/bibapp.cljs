@@ -1,0 +1,742 @@
+(ns solsort.apps.bibapp ; #
+  (:require-macros
+    [reagent.ratom :as ratom :refer [reaction]]
+    [cljs.core.async.macros :refer  [go alt!]])
+
+  (:require
+    [cljs.test :refer-macros  [deftest testing is]]
+    [goog.net.XhrIo]
+    [goog.net.Jsonp]
+    [goog.object]
+    [solsort.util :refer [log <ajax host route]]
+    [solsort.ui :refer [input]]
+    [solsort.misc :refer [<seq<! unique-id]]
+    [re-frame.core :as re-frame :refer  [register-sub subscribe register-handler dispatch dispatch-sync]]
+    [solsort.db :refer [db-url]]
+    [clojure.string :as string]
+    [reagent.core :as reagent :refer []]
+    [cljs.core.async.impl.channels :refer [ManyToManyChannel]]
+    [cljs.core.async :refer [>! <! chan put! take! timeout close!]]))
+
+; # BibApp
+; TODO: extract common styling to classes
+(defn jslog [o] (js/console.log (js/Date.) (clj->js o)) o)
+(defn square [a] (* a a))
+(defn epsilon [] (* 0.00001 (- (js/Math.random) (js/Math.random))))
+(def background-color "black")
+(def header-space 2)
+(def view-width 16)
+(def view-height (+ header-space 18))
+(def widget-height (- view-height header-space 2.5))
+(def isbn-covers true)
+
+(defonce ting-objs  ; ##
+  (cycle
+    (shuffle 
+      ["870970-basis:29820031" "870970-basis:45231402" "870970-basis:29146004" 
+       "870970-basis:28794630" "870970-basis:28904061" "870970-basis:45574881" 
+       "870970-basis:51604288" "870970-basis:44351641" "870970-basis:45470075" 
+       "870970-basis:27697917" "870970-basis:22324284" "870970-basis:28452551" 
+       "810010-katalog:008471560" "870970-basis:44741830" "870970-basis:28534698" 
+       "870970-basis:45583457" "870970-basis:45386864" "870970-basis:45421716" 
+       "870970-basis:28052472" "870970-basis:45493016" "870970-basis:44291738" 
+       "870970-basis:23060132" "810010-katalog:007071351" "870970-basis:45554813" 
+       "870970-basis:45237648" "870970-basis:28407513" "870970-basis:44950723" 
+       "830380-katalog:93161505" "870970-basis:27006434" "870970-basis:45618765" 
+       "870970-basis:26666074" "870970-basis:44695634" 
+       "870970-basis:27455344" "870970-basis:28815263" "870970-basis:27578381" 
+       "870970-basis:50914968" "870970-basis:45170306" "870970-basis:45233758" 
+       "870970-basis:29706328" "870970-basis:51582772" "870970-basis:45199088" 
+       "870970-basis:27880436" "870970-basis:29991537" "870970-basis:44313235" 
+       "870970-basis:23116642" "870970-basis:45233332" "870970-basis:44547759" 
+       "870970-basis:44910888" "870970-basis:51313380" "870970-basis:44887509" 
+       "870970-basis:26829798" "870970-basis:45005801" "870970-basis:25893018" 
+       "870970-basis:44364999" "870970-basis:44331225" "870970-basis:50625656" 
+       "870970-basis:45534952" "870970-basis:44591413" "870970-basis:44592045" 
+       "870970-basis:28522517" "870970-basis:29100160" "870970-basis:26396417" 
+       "870970-basis:50565858" "870970-basis:28930240" "870970-basis:28108990" 
+       "870970-basis:27195105" "870970-basis:28372531" "870970-basis:44831562" 
+       "870970-basis:50520846" "870970-basis:45182266" "870970-basis:29158746" 
+       "870970-basis:43917579" "870970-basis:45217345" "870970-basis:45263762" 
+       "870970-basis:50909794" "810010-katalog:007144163" "870970-basis:26952425" 
+       "870970-basis:27873251" "870970-basis:45350568" "870970-basis:44850001" 
+       "870970-basis:44520028" "870970-basis:44150484" "870970-basis:27561527" 
+       "870970-basis:27867138" "870970-basis:28539290" "870970-basis:45153843" 
+       "870970-basis:29287341" "870970-basis:26681316" "870970-basis:45281434" 
+       "870970-basis:28715730" "870970-basis:45300439" "870970-basis:45575969" 
+       "870970-basis:28283032" "870970-basis:28379129" 
+       "870970-basis:27374859" "820010-katalog:3096314" "870970-basis:26509904" 
+       "870970-basis:44741385" "870970-basis:28958188" 
+       "870970-basis:44406365" "870970-basis:44623234" "870970-basis:44973650" 
+       "870970-basis:44537052" "870970-basis:51283708" "870970-basis:45377458" 
+       "870970-basis:28009011" "870970-basis:45076261" "870970-basis:27165435" 
+       "870970-basis:24232123" "870970-basis:45164683" "870970-basis:44529807"])))
+
+
+; ## subscriptions: :books :back-positions :front-positions :saved-positions :step-size :query
+(register-sub :books (fn [db] (reaction (get @db :books {}))))
+(register-handler :books (fn [db [_ books]] (assoc db :books (into (get db :books {}) books))))
+
+(register-sub :back-positions (fn [db] (reaction (get @db :back-positions []))))
+(register-handler :back-positions 
+                  (fn [db [_ back-positions]] (assoc db :back-positions back-positions)))
+
+(register-sub :front-positions (fn [db] (reaction (get @db :front-positions []))))
+(register-handler :front-positions 
+                  (fn [db [_ front-positions]] (assoc db :front-positions front-positions)))
+
+(register-sub :query (fn [db] (reaction (get @db :query))))
+(register-handler :query (fn [db [_ q]] (assoc db :query q)))
+
+(register-sub :coverable (fn [db] (reaction (get @db :coverable))))
+(register-handler :coverable (fn [db [_ coverable]] (assoc db :coverable coverable)))
+
+(register-sub :show (fn [db] (reaction (get @db :show))))
+(register-handler :show (fn [db [_ show]] (assoc db :show show)))
+
+(register-sub :step-size (fn [db] (reaction (get @db :step-size))))
+(register-handler :step-size (fn [db [_ step-size]] (assoc db :step-size step-size)))
+
+(register-sub 
+  :ting 
+  (fn [db [_ id]] 
+    (reaction (get-in @db [:ting id] {}))))
+(register-handler 
+  :ting (fn [db [_ id o]] 
+          (assoc-in db [:ting id] (into (get-in db [:ting id] {}) o))))
+
+; ## :front-positions :back-positions :books initialisation
+(defn set-id [type os] 
+  (map #(into %1 {:id [type %2] :x (+ (:x %1) (epsilon)) :y (+ (:y %1) (epsilon))}) 
+       os (range)))
+
+(dispatch-sync
+  [:front-positions
+   (set-id :front
+           (concat
+             (map #(into % {:y (+ header-space (:y %)) :size 3 :pos :front})
+                  #_[{:x 3 :y 2} {:x 13 :y 2}
+                   {:x 8 :y 6} 
+                   {:x 8 :y 12}
+                   {:x 2 :y 9} {:x 14 :y 9}
+                   {:x 3 :y 16} {:x 13 :y 16}]
+                  [{:x 2 :y 3} {:x 10 :y 3}
+                   {:x 6 :y 7} {:x 14 :y 7}
+                   {:x 2 :y 11} {:x 10 :y 11}
+                   {:x 6 :y 15} {:x 14 :y 15} ]
+                  #_[{:x 2 :y 2} {:x 10 :y 2}
+                   {:x 6 :y 5} {:x 14 :y 5}
+                   {:x 2 :y 8} {:x 10 :y 8}
+                   {:x 6 :y 11} {:x 14 :y 11}
+                   {:x 2 :y 14} {:x 10 :y 14}]
+                  #_(map (fn [t] {:x (+ 8 (* 6 (js/Math.sin t))) 
+                                :y (+ 9 (* -7 (js/Math.cos t)))})
+                       (range 0 (* 2 js/Math.PI) (/ js/Math.PI 4))))
+             #_(map (fn [x] {:x x :y (- view-height 1) :size 1.8 :pos :saved}) 
+                    (range 1 17 2))))])
+
+(dispatch-sync 
+  [:back-positions
+   (map 
+     (fn [o]
+       ; TODO: have list of nearest 3 front-neighbours, instead of single
+       (assoc o :front-neighbours
+              [(:id
+                 (apply min-key
+                        #(+ (square (- (:x o) (:x %)))
+                            (square (- (:y o) (:y %))))
+                        @(subscribe [:front-positions])))]))
+     (set-id :back
+             (map (fn [x y] {:x x :y (+ y header-space) :size 2 :pos :back})
+                  (cycle (concat (range 1 17 2) (range 0 17 2)))
+                  (concat (repeat 8 1) (repeat 9 3)
+                          (repeat 8 5) (repeat 9 7)
+                          (repeat 8 9) (repeat 9 11)
+                          (repeat 8 13) (repeat 9 15)
+                          (repeat 8 17) 
+                          ))))])
+
+(defonce books-initialise
+  (dispatch-sync
+    [:books
+     (into {} (->> 
+                (concat @(subscribe [:front-positions]))
+                (map #(into %2 {:ting %1}) ting-objs)
+                (map (fn [o] [(:id o) o]))))]))
+
+(defn back-books [db] ; ##
+  (assoc 
+    db :books
+    (loop [backs (:back-positions db)
+           taboo 
+           (into #{} (concat 
+                       (->> (:books db) 
+                            (map second) 
+                            (filter #(= :front (first (:id %)))) 
+                            (map :ting))
+                       #_(->> (:ting db)
+                              (filter (fn [[a b]] (not (:has-cover b))))
+                              (map first))
+                       ))
+           books (:books db)
+
+           ]
+      (if (seq backs)
+        (let [o (first backs)
+              parent-id (first (:front-neighbours o))
+              parent (get-in db [:books parent-id])
+              options (filter #(not (taboo %))
+                              (get-in db [:ting (:ting parent) :related]))   
+              options (filter #(contains? (:coverable db) %) options)
+              ting (first options)
+              books (assoc books (:id o) (into o {:ting ting}))]
+          (recur (rest backs) (conj taboo ting) books))
+        books))))
+(register-handler :back-books back-books)
+(dispatch-sync [:back-books])
+; ## API-access
+(defn cover-api-url [id]
+  (str "https://dev.vejlebib.dk/ting-visual-relation/get-ting-object/" id))
+(defn <jsonp [url] ; ### custom jsonp needed due to bug in dev.vejlebib.dk jsonp-implementation
+  (let [url (str url "?callback=")
+        c (chan)
+        id (unique-id)]
+    (aset js/window id
+          (fn [o]
+            (if o 
+              (put! c (js->clj o))
+              (close! c))
+            (goog.object.remove js/window id)))
+    (let [tag (js/document.createElement "script")]
+      (aset tag "async" true)
+      (aset tag "src" (str url id))
+      (js/document.head.appendChild tag))
+    c))
+
+(defn <search [s] ; ###
+  (go (map #(% "_id")
+           (get-in (<! (<ajax (str "http://solsort.com/es/bibapp/ting/_search?q=" s) :credentials (not (= js/location.host "solsort.com"))))
+                   ["hits" "hits"]))))
+;(go (log (<! (<search "harry potter"))))
+
+(defn <info [id] ; ###
+  (go (let [o (<! (<ajax (str "http://solsort.com/db/bib/" id)))] 
+        (if-not o {}
+          {:title (first (o "title"))
+         :description (first (o "description"))
+         :abstract (first (o "abstract"))
+         :date (first (o "date"))
+         :creator (string/join " & "(o "creator"))
+         :related (->> (o "related") (drop 1) (map first))
+         :isbn (->> (o "isbn") (filter #(= "978" (.slice % 0 3))) (first))
+         :isbn-cover (->> (o "isbn")
+                          (filter #(= "978" (.slice % 0 3)))
+                          (map #(str "http://www.bogpriser.dk/Covers/"  (.slice % 10) "/" % ".jpg"))
+                          (first))
+         :has-cover (first (o "hasTingCover"))
+         ;:vector 
+         #_(js/Float32Array.from 
+                   (.map (.split (or (first (o "vector")) "0") ",") #(js/Number %)))}))))
+;(go (js/console.log (clj->js (<! (<info "870970-basis:24945669")))))
+
+(defn <cover-url [id] ; ###
+  (go (get (first 
+             (filter #(= "cover" (get % "property"))
+                     (<! (<jsonp (cover-api-url id))))) 
+           "value")))
+;(go (log (<! (<cover-url "870970-basis:24945669"))))
+
+(defn find-nearest [db [x y]] ; ##
+  (:id (apply min-key
+              #(+ (square (- x (:x %)))
+                  (square (- y (:y %))))
+              (:front-positions db))))
+
+(defn calc-back [db] ; ##
+  (let [back-pos (:back-positions db)])
+  )
+(register-handler :calck-back (fn [db _] (calc-back db)))
+; ## pointer events
+(register-sub :pointer-down (fn [db] (reaction (get-in @db [:pointer :down]))))
+
+(defn pos-obj [db [type id]]
+  (nth (if (= type :front) (db :front-positions) (db :back-positions)) id))
+
+
+(defn release [db oid book [x y]]
+  (let [nearest (find-nearest db [x y])
+        nearest-book (get-in db [:books nearest])
+        [dx dy] (get book :delta-pos)
+        max-dist (* 0.5 (:size nearest-book))
+        overlap (if (and (> max-dist (js/Math.abs (- x (:x nearest-book)))) 
+                         (> max-dist (js/Math.abs (- y (:y nearest-book))))
+                         (not= oid nearest)
+
+                         )
+                  nearest
+                  nil)
+        db (assoc-in db [:books oid] (assoc (pos-obj db oid) :ting (:ting book)))]
+    (cond
+      overlap 
+      (-> db 
+          (assoc-in [:books overlap] (assoc (pos-obj db overlap) :ting (:ting book)))
+          (assoc-in [:books oid] (assoc (pos-obj db oid) :ting (:ting nearest-book))))
+
+      (and (> 100 (+ (* dx dx) (* dy dy)))
+           (> 1500 (- (js/Date.now) (get-in db [:pointer :start-time]))))
+      (do
+        (aset js/location "hash" (str "#solsort:bib/bibapp/" (get-in db  [:books oid :ting])))
+        db)
+
+      :else db)))
+
+(register-handler
+  :pointer-up
+  (fn [db _]
+    (if-not (get-in db [:pointer :down])
+      db
+      (let [oid (get-in db [:pointer :oid])
+            book (get-in db [:books oid])
+            start-time (get-in db [:pointer :start-time])
+            [x y] (get-in db [:pointer :pos])
+            x (- x (.-offsetLeft js/bibappcontainer))
+            y (- y (.-offsetTop js/bibappcontainer))
+            [x-step y-step] (get db :step-size [1 1])
+            [x y] [(/ x x-step) (/ y y-step)]
+            db (assoc-in db [:pointer :down] false)]
+        (if book
+          (-> db
+              (release oid book [x y]) 
+              (back-books))
+          db)))))
+
+(register-handler
+  :pointer-down
+  (fn [db [_ oid x y]]
+    (if (get db :show)
+      (do (aset js/location "hash" "#solsort:bib/bibapp") db)
+      (let [book  (get-in db  [:books oid])]
+        (-> db
+            (assoc-in [:pointer :start-time] (js/Date.now))
+            (assoc-in [:pointer :down] true)
+            (assoc-in [:pointer :oid] oid)
+            (assoc-in
+              [:books oid]
+              (-> book
+                  (assoc :pos :active)
+                  (assoc :prev-pos (or (:prev-pos book) (:pos book)))))
+            (assoc-in [:pointer :pos] [x y])
+            (assoc-in [:pointer :pos0] [x y]))))))
+
+(register-handler
+  :pointer-move
+  (fn [db [_ x y]]
+    (if (get-in db [:pointer :down])
+      (let [[x0 y0] (get-in db [:pointer :pos0])
+            [dx dy] [(- x x0) (- y y0)]
+            oid (get-in db [:pointer :oid])
+            book (get-in db [:books oid])]
+        (-> db
+            (assoc-in [:pointer :pos] [x y])
+            (assoc-in
+              [:books oid]
+              (-> book
+                  (assoc :delta-pos [dx dy])))))
+      db)))
+
+(defn pointer-move [e pointer]
+  (dispatch-sync [:pointer-move (aget pointer "clientX") (aget pointer "clientY")]) 
+  (.preventDefault e))
+
+(defn pointer-down [o e pointer]
+  (dispatch-sync [:pointer-down (:id o) (aget pointer "clientX") (aget pointer "clientY")])
+  (.preventDefault e))
+
+(defn load-ting [id] ; ##
+  (when (not (:title @(subscribe [:ting id])))
+    (log 'loading id)
+    (dispatch-sync [:ting id {:title "[loading]"}])  
+    (go (let [o (<! (<info id))]
+          (dispatch [:ting id o])
+          (dispatch [:ting id {:cover (:isbn-cover o)
+                               #_(if (contains? @(subscribe [:coverable]) id)  
+                                        (:isbn-cover o)
+                                        (<! (<cover-url id)))} ])
+          (dispatch [:back-books])))
+    (log 'loaded id)
+    ))
+(defn book-elem ; ##
+  [o x-step y-step]
+  (let [[dx dy] (get o :delta-pos [0 0])
+        ting @(subscribe [:ting (:ting o)])]
+    (when (:ting o)
+      (load-ting (:ting o)))
+    [:span
+     {:on-mouse-down #(pointer-down o % %)
+      :on-touch-start #(pointer-down o % (aget (aget % "touches") 0))
+      :style
+      (into
+        {:background "#333"
+         :position :absolute
+         :display :inline-block
+         :z-index ({:hidden 1 :back 2 :front 3 :saved 4 :active 5} (:pos o))
+         :left (+ (* x-step (- (:x o) (/ (:size o) 2))) dx)
+         :top (+ (* y-step (- (:y o) (/ (:size o) 2))) dy)
+         :width (- (* x-step (:size o)) 1)
+         :height (- (* y-step (:size o)) 1)
+         :outline (str "1px solid " background-color)}
+        (case (:pos o)
+          :hidden {}
+          :back {}
+          :front {:box-shadow "5px 5px 10px black" }
+          :saved { :outline "1px solid white" }
+          :active{:box-shadow "10px 10px 20px black"}
+          (log {}  'ERR-MISSING-POS (:pos o) o) ))}
+     [:img {:src (or (:isbn-cover ting) (:cover ting)) :width "100%" :height "100%"}] 
+     [:div {:style {:position "absolute"
+                    :display "inline-block"
+                    :top 0 :left 0
+                    :width "100%" :height "100%"
+                    ;:color "black"
+                    :color "#333"
+                    :padding 0
+                    :margin 0
+                    :overflow "hidden"
+                    :font-size 10
+                    :background
+                    (if (= :back (:pos o))
+                      "rgba(255,255,255,0.45)"
+                      "rgba(0,0,0,0)")}}
+
+      ;(:title ting)
+      ]]))
+
+(defn search [] ; ## 
+  (go
+    (let [results (<! (<search @(subscribe [:query])))
+          positions 
+          (->> @(subscribe [:front-positions])
+               (filter #(= :front (:pos %)))
+               )
+          books 
+          (map 
+            (fn [id o] [(:id o) (into o {:ting id})]) 
+            results 
+            (shuffle positions))
+          ]
+      (dispatch [:books books])
+      (dispatch [:back-books]))))
+(defn bibapp-header [x-step y-step] ; ##
+  [:div
+   [:input
+    {:type "submit"
+     :on-mouse-down search
+     :on-touch-start search
+     :on-submit search
+     :value "søg"
+     :style {:display :inline-block
+             :width (* 3 x-step)
+             :text-align "center"
+             :background "black"
+             :font-size (* 0.8 y-step)
+             :float "right"
+             :padding-top (* .15 y-step)
+             :padding-bottom (* .25 y-step)
+             :padding-left 0
+             :padding-right 0
+             :margin (* .20 y-step)
+             :border "2px solid white"
+             :border-radius (* .2 y-step)
+             }}]
+   [:input {:value (str @(subscribe [:query]))
+            :on-key-down #(when (= 13 (.-keyCode %)) (search))
+            :on-change
+            (fn  [e] (dispatch-sync  [:query (-> e .-target  (aget "value"))])) 
+            :style {:display :inline-block
+                    :width (* 10.5 x-step)
+                    :font-size (* 0.8 y-step)
+                    :padding-top (* .20 y-step)
+                    :padding-bottom (* .20 y-step)
+                    :margin (* .20 y-step)
+                    :background :black
+                    :border-top "2px solid black"
+                    :border-left "0px"
+                    :border-right "0px"
+                    :border-radius "0px"
+                    :border-bottom "2px solid white"}}]])
+
+
+(defn bibinfo [] ; ##
+  (if @(subscribe [:show]) 
+    (let [id @(subscribe [:show])    
+          o @(subscribe [:ting id])]
+      [:div {
+             :on-mouse-down #(pointer-down o % %)
+             :on-touch-start #(pointer-down o % (aget (aget % "touches") 0))
+             :style 
+             {:position :absolute
+              :top "30%"
+              :transform "translateY(-30%)"
+              :left 0
+              :right 0
+              :margin "auto"
+              :width "94%"
+              :max-height "96%"
+              :max-width 500
+              :overflow :hidden
+              :padding-top "1%"
+              :padding-left "3%"
+              :padding-right "3%"
+              :padding-bottom "0%"
+              :box-sizing :border-box
+              :box-shadow "5px 5px 10px black"
+              :outline "1px solid black"
+              ;:border "2px solid black"
+              :color "black"
+              ;:border-radius "3px"
+              :text-align :left
+              :background "rgba(255,245,230,0.95)"
+              :text-shadow "0px 0px 4px white"
+              :z-index "10" }}
+
+
+       [:h1 {:style {:font-size "150%"
+                     :margin "0 0 2% 0"
+                     :clear :none :text-align :left}} (:title o)]
+       [:img {:src (:cover o) 
+              :style
+              {:width "50%"
+               :float :right
+               :max-width 200
+               :margin-bottom "2%"
+               }
+              }]
+       [:div {:style 
+              {
+               :text-align :center}}[:i "af " (:creator o)]]
+       [:p {:style 
+            {:text-shadow "none"
+             :font-size "80%"
+             :text-align :center
+             }} 
+        [:a {:href 
+             (str "http://bibliotek.dk/linkme.php?rec.id=" id)
+             :target "_blank"
+             :on-mouse-down #(js/open (str "http://bibliotek.dk/linkme.php?rec.id=" id))
+             :on-touch-start #(js/open (str "http://bibliotek.dk/linkme.php?rec.id=" id))
+             :style
+             {:display :inline-block
+              :box-sizing :border-box
+              :font-weight :bold
+              :text-decoration "none"
+              :color "white"
+              :background "black"
+              :padding "8px 2px 8px 4px"}}
+         " BIBLIOTEK" [:span 
+                       {:style {:color "#088eb4"}}
+                       "DK "]]
+        [:a {:href 
+             (str "https://bibliotek.dk/da/reservation?ids=" id)
+             :on-mouse-down #(js/open (str "https://bibliotek.dk/da/reservation?ids=" id))
+             :on-touch-start #(js/open (str "https://bibliotek.dk/da/reservation?ids=" id))
+             :target "_blank"
+             :style
+             {:display :inline-block
+              :box-sizing :border-box
+              :text-decoration "none"
+              :background "#088eb4"
+              :font-weight :bold
+              :color "white"
+              :padding "6px 2px 6px 2px" 
+              :border-left "1px solid white"
+              :border-top "2px solid #088eb4"
+              :border-right "2px solid #088eb4"
+              :border-bottom "2px solid #088eb4"}}
+         " Bestil "]
+        [:p {:style 
+            {:text-shadow "none"
+             :font-size "60%"
+             :text-align :center
+             }} 
+         [:a {:href 
+             (str "http://www.bogpriser.dk/Search/Result?isbn=" (:isbn o)) 
+             :target "_blank"
+             :on-mouse-down #(js/open (str "http://www.bogpriser.dk/Search/Result?isbn=" (:isbn o)))
+             :on-touch-start #(js/open (str "http://www.bogpriser.dk/Search/Result?isbn=" (:isbn o)))
+             :style
+             {:display :inline-block
+              :box-sizing :border-box
+              :font-weight :bold
+              :text-decoration "none"
+              :color "white"
+              :background "#605746"
+              :padding "7px 7px 7px 7px"}}
+         " BOGPRISER" [:span 
+                       {:style {:color "#ffdc12"}}
+                       ".DK "]]]
+        
+        ]
+       [:p 
+        {:style {:margin "5%" :hyphens "auto" }}
+        (or (:abstract o) (:description o))]
+       [:p 
+        {:style {:margin "5%"}}
+        "Udgivet " (:date o)]])
+    [:span]))
+(defn splash-screen [] ; ##
+  [:div
+   {:style {:text-align :center
+            :color "#cfc"}}
+   [:h1 "BibApp"]
+   [:h2 "Eksperimentel prototype"]
+   [:p "- ikke optimeret, så hav tålmodighed."]
+   [:br] [:br] [:br]
+   [:p "Træk bøger" [:br] "fra baggrund til forgrund" [:br] "for inspiration"]
+   [:br] [:br] [:br]
+   [:p "solsort.com"]]
+  )
+
+         (defn bibfooter []; ##
+           [:div 
+            #_[:div {:style 
+                   {:position :absolute
+                    :color "white"
+                    :z-index 7
+                    :left 0
+                    :right 0
+                    :bottom 0
+                    :text-align :left
+                    :font-size 10
+            :text-shadow "
+            0px 0px 1px black,
+            0px 0px 2px black,
+            0px 0px 3px black,
+            0px 0px 3px black,
+            0px 0px 2px black,
+            0px 0px 1px black
+                         "
+                    }
+                   } 
+                (into  [:div]
+                               (map
+                                            (fn  [e]  [:div  {:key  (unique-id)}  (.slice  (str e) 1 -1)])
+                                                       @(subscribe  [:log])))
+             "Temporarily defunkt due to debugging in progress"
+             
+             ]
+            [:div
+          {:style
+           {:position :absolute
+            :z-index 6
+            :width "96%"
+            :bottom 0
+            :font-size 12
+            :margin "2%"
+
+            :text-shadow "
+            0px 0px 1px black,
+            0px 0px 2px black,
+            0px 0px 3px black,
+            0px 0px 3px black,
+            0px 0px 2px black,
+            0px 0px 1px black
+                         "
+            :height 24
+            :color "#dfd"
+            }
+           }
+          [:div {:style
+                 {:display :inline-block
+                  :float :left
+                  :text-align :left} }
+
+          "Træk bøger fra baggrund " [:br]  "til forgrund "  "for inspiration" ]
+          [:div {:style
+                 {:display :inline-block
+                  :float :right
+                  :text-align :right } }
+          " Eksperimentel prototype," [:br]
+          " - så hav tålmodighed."]
+          ]])
+          
+(defn hashupdate []
+  (jslog js/location.hash)
+  (dispatch [:show (second (re-find #"bibapp/(.*)" js/location.hash))])
+  )
+(defn bibapp [] ; ##
+  (let
+    [ww @(subscribe [:width])
+     wh @(subscribe [:height])
+     xy-ratio (-> (/ (/ wh view-height) (/ ww view-width))
+                  (js/Math.min 1.6)
+                  (js/Math.max 1.3))
+     x-step (js/Math.min
+              (/ ww view-width)
+              (/ wh view-height xy-ratio))
+     y-step (* xy-ratio x-step)]
+    #_(aset js/location "hash" 
+          (str "#solsort:bib/bibapp" 
+               (if @(subscribe [:show])
+                 (str "/" @(subscribe [:show])) 
+                 "")))
+     #_(aset js/location "hash"
+            (.replace js/location.hash
+                      #"bibapp.*" 
+                      (if @(subscribe [:show])    
+                        (str "bibapp/" @(subscribe [:show])    )
+                        ("bibapp"))))
+    (dispatch-sync [:step-size [x-step y-step]])
+    (if @(subscribe [:coverable]) 
+      (into
+        [:div {:on-mouse-move #(pointer-move % %)
+               :on-touch-move #(pointer-move % (aget (aget % "touches") 0))
+               :on-mouse-up #(dispatch-sync [:pointer-up])  
+               :on-touch-end #(dispatch-sync [:pointer-up])  
+               :id "bibappcontainer"
+               :style {:display :inline-block
+                       :width (* x-step view-width)
+                       :height (* y-step view-height)
+                       :background background-color
+                       :left (* .5 (- ww (* x-step view-width)))
+                       :position :absolute
+                       :overflow :hidden
+                       :color "white"
+                       }}
+         [bibapp-header x-step y-step]
+         [bibinfo]
+         [bibfooter]
+         ]
+        (map #(book-elem % x-step y-step)
+             (map second (seq @(subscribe [:books])))))
+      (do
+        (go
+          (dispatch [:coverable (into #{} (get (<! (<ajax "http://solsort.com/db/bib/coverable")) "coverable"))])
+          )
+        [splash-screen]
+        ))))
+
+
+(route "bib"  ; #
+      {:type :html :html
+                [:div
+                 {:style
+                  {:display :inline-block
+                   :position :absolute
+                   :width "100%"
+                   :height "100%"
+                   :background "black"}
+                  }
+                 [bibapp]
+                 ]})
+(route "bibapp" 
+      {:type :html :html
+                [:div
+                 {:style
+                  {:display :inline-block
+                   :position :absolute
+                   :width "100%"
+                   :height "100%"
+                   :background "black"}
+                  }
+                 [bibapp]
+                 ]})
