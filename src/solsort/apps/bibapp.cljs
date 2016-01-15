@@ -8,13 +8,13 @@
 ;; The recommendation calculation and data preprocessing lives in another repository: 
 ;; https://github.com/rasmuserik/bib-data/.
 ;;
-;; This repository contains both the app itself, and also the report for the competition entry.
+;; This repository contains both the app, and also the report for the competition entry.
 ;; The source code for the app is in `src/solsort/apps/bibapp.cljs`, and is also included
 ;; below. The app itself is just a HTML5 app, and can be bundled for various platforms
-;; and app stores with cordova (configuration in `config.xml`). The source for the report is
+;; and app stores with cordova (configuration in `config.xml`, prebuild android app is `bibapp.apk`). The source for the report is
 ;; in `report/`, and a pdf-version is prerendered in `bibapp.pdf`
 ;;
-;; *Major changes to the underlying API is in progress, so it probably will not build at the moment*
+;; *Major restructuring in progress, so it probably will not build at the moment*
 ;;
 ;; # Actual implementation
 ;;
