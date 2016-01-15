@@ -1,4 +1,18 @@
-(ns solsort.apps.bibapp ; #
+;; # BibApp
+;;
+;; BibApp was the winning entry in DBCs cultural app competition. 
+;; Related links:
+;;
+;; - Competition announcement(in danish): http://www.dbc.dk/news/konkurrence-lav-kultur-app
+;; - Online version of the app (only works when api-server is running): https://solsort.com/apps/bibapp
+;; - Data processing code, which precalculates recommendations, eigenvectors etc.: https://github.com/rasmuserik/bib-data
+;;
+;; # Literate source code
+;;
+;; **WARNING** This is a quick prototype / proof-of-concept and contains many hacks 
+;; that should never be used in production.
+;;
+(ns solsort.apps.bibapp ; ##
   (:require-macros
     [reagent.ratom :as ratom :refer [reaction]]
     [cljs.core.async.macros :refer  [go alt!]])
@@ -8,17 +22,13 @@
     [goog.net.XhrIo]
     [goog.net.Jsonp]
     [goog.object]
-    [solsort.util :refer [log <ajax host route]]
-    [solsort.ui :refer [input]]
-    [solsort.misc :refer [<seq<! unique-id]]
+    [solsort.util :refer [log <ajax route input <seq<! unique-id log <ajax host route]]
     [re-frame.core :as re-frame :refer  [register-sub subscribe register-handler dispatch dispatch-sync]]
-    [solsort.db :refer [db-url]]
     [clojure.string :as string]
     [reagent.core :as reagent :refer []]
-    [cljs.core.async.impl.channels :refer [ManyToManyChannel]]
     [cljs.core.async :refer [>! <! chan put! take! timeout close!]]))
 
-; # BibApp
+; ## BibApp
 ; TODO: extract common styling to classes
 (defn jslog [o] (js/console.log (js/Date.) (clj->js o)) o)
 (defn square [a] (* a a))
@@ -30,7 +40,7 @@
 (def widget-height (- view-height header-space 2.5))
 (def isbn-covers true)
 
-(defonce ting-objs  ; ##
+(defonce ting-objs  ; ###
   (cycle
     (shuffle 
       ["870970-basis:29820031" "870970-basis:45231402" "870970-basis:29146004" 
@@ -73,7 +83,7 @@
        "870970-basis:24232123" "870970-basis:45164683" "870970-basis:44529807"])))
 
 
-; ## subscriptions: :books :back-positions :front-positions :saved-positions :step-size :query
+; ### subscriptions: :books :back-positions :front-positions :saved-positions :step-size :query
 (register-sub :books (fn [db] (reaction (get @db :books {}))))
 (register-handler :books (fn [db [_ books]] (assoc db :books (into (get db :books {}) books))))
 
@@ -105,7 +115,7 @@
   :ting (fn [db [_ id o]] 
           (assoc-in db [:ting id] (into (get-in db [:ting id] {}) o))))
 
-; ## :front-positions :back-positions :books initialisation
+; ### :front-positions :back-positions :books initialisation
 (defn set-id [type os] 
   (map #(into %1 {:id [type %2] :x (+ (:x %1) (epsilon)) :y (+ (:y %1) (epsilon))}) 
        os (range)))
@@ -164,7 +174,7 @@
                 (map #(into %2 {:ting %1}) ting-objs)
                 (map (fn [o] [(:id o) o]))))]))
 
-(defn back-books [db] ; ##
+(defn back-books [db] ; ###
   (assoc 
     db :books
     (loop [backs (:back-positions db)
@@ -194,10 +204,10 @@
         books))))
 (register-handler :back-books back-books)
 (dispatch-sync [:back-books])
-; ## API-access
+; ### API-access
 (defn cover-api-url [id]
   (str "https://dev.vejlebib.dk/ting-visual-relation/get-ting-object/" id))
-(defn <jsonp [url] ; ### custom jsonp needed due to bug in dev.vejlebib.dk jsonp-implementation
+(defn <jsonp [url] ; #### custom jsonp needed due to bug in dev.vejlebib.dk jsonp-implementation
   (let [url (str url "?callback=")
         c (chan)
         id (unique-id)]
@@ -213,13 +223,13 @@
       (js/document.head.appendChild tag))
     c))
 
-(defn <search [s] ; ###
+(defn <search [s] ; ####
   (go (map #(% "_id")
            (get-in (<! (<ajax (str "http://solsort.com/es/bibapp/ting/_search?q=" s) :credentials (not (= js/location.host "solsort.com"))))
                    ["hits" "hits"]))))
 ;(go (log (<! (<search "harry potter"))))
 
-(defn <info [id] ; ###
+(defn <info [id] ; ####
   (go (let [o (<! (<ajax (str "http://solsort.com/db/bib/" id)))] 
         (if-not o {}
           {:title (first (o "title"))
@@ -239,24 +249,24 @@
                    (.map (.split (or (first (o "vector")) "0") ",") #(js/Number %)))}))))
 ;(go (js/console.log (clj->js (<! (<info "870970-basis:24945669")))))
 
-(defn <cover-url [id] ; ###
+(defn <cover-url [id] ; ####
   (go (get (first 
              (filter #(= "cover" (get % "property"))
                      (<! (<jsonp (cover-api-url id))))) 
            "value")))
 ;(go (log (<! (<cover-url "870970-basis:24945669"))))
 
-(defn find-nearest [db [x y]] ; ##
+(defn find-nearest [db [x y]] ; ###
   (:id (apply min-key
               #(+ (square (- x (:x %)))
                   (square (- y (:y %))))
               (:front-positions db))))
 
-(defn calc-back [db] ; ##
+(defn calc-back [db] ; ###
   (let [back-pos (:back-positions db)])
   )
 (register-handler :calck-back (fn [db _] (calc-back db)))
-; ## pointer events
+; ### pointer events
 (register-sub :pointer-down (fn [db] (reaction (get-in @db [:pointer :down]))))
 
 (defn pos-obj [db [type id]]
@@ -352,7 +362,7 @@
   (dispatch-sync [:pointer-down (:id o) (aget pointer "clientX") (aget pointer "clientY")])
   (.preventDefault e))
 
-(defn load-ting [id] ; ##
+(defn load-ting [id] ; ###
   (when (not (:title @(subscribe [:ting id])))
     (log 'loading id)
     (dispatch-sync [:ting id {:title "[loading]"}])  
@@ -365,7 +375,7 @@
           (dispatch [:back-books])))
     (log 'loaded id)
     ))
-(defn book-elem ; ##
+(defn book-elem ; ###
   [o x-step y-step]
   (let [[dx dy] (get o :delta-pos [0 0])
         ting @(subscribe [:ting (:ting o)])]
@@ -411,7 +421,7 @@
       ;(:title ting)
       ]]))
 
-(defn search [] ; ## 
+(defn search [] ; ### 
   (go
     (let [results (<! (<search @(subscribe [:query])))
           positions 
@@ -426,7 +436,7 @@
           ]
       (dispatch [:books books])
       (dispatch [:back-books]))))
-(defn bibapp-header [x-step y-step] ; ##
+(defn bibapp-header [x-step y-step] ; ###
   [:div
    [:input
     {:type "submit"
@@ -466,7 +476,7 @@
                     :border-bottom "2px solid white"}}]])
 
 
-(defn bibinfo [] ; ##
+(defn bibinfo [] ; ###
   (if @(subscribe [:show]) 
     (let [id @(subscribe [:show])    
           o @(subscribe [:ting id])]
@@ -583,7 +593,7 @@
         {:style {:margin "5%"}}
         "Udgivet " (:date o)]])
     [:span]))
-(defn splash-screen [] ; ##
+(defn splash-screen [] ; ###
   [:div
    {:style {:text-align :center
             :color "#cfc"}}
@@ -596,7 +606,7 @@
    [:p "solsort.com"]]
   )
 
-         (defn bibfooter []; ##
+         (defn bibfooter []; ###
            [:div 
             #_[:div {:style 
                    {:position :absolute
@@ -663,7 +673,7 @@
   (jslog js/location.hash)
   (dispatch [:show (second (re-find #"bibapp/(.*)" js/location.hash))])
   )
-(defn bibapp [] ; ##
+(defn bibapp [] ; ###
   (let
     [ww @(subscribe [:width])
      wh @(subscribe [:height])
@@ -716,7 +726,9 @@
         ))))
 
 
-(route "bib"  ; #
+;; ## Routes
+;;
+(route "bib" 
       {:type :html :html
                 [:div
                  {:style
@@ -740,3 +752,6 @@
                   }
                  [bibapp]
                  ]})
+
+;; # README.md is autogenerated from literate source code, do NOT edit manually
+;;
