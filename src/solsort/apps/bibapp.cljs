@@ -1,6 +1,6 @@
 ;; # BibApp
 ;;
-;; BibApp is the winning entry in <a href=http://www.dbc.dk/news/konkurrence-lav-kultur-app>
+;; BibApp is the <a href=http://www.dbc.dk/news/vinderen-i-app-konkurrencen-er-fundet">winning</a> entry in <a href=http://www.dbc.dk/news/konkurrence-lav-kultur-app>
 ;; DBCs cultural app competition</a>.
 ;;
 ;; It is a new way to explore library materials.
