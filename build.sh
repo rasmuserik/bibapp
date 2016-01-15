@@ -25,4 +25,4 @@ cp -a platforms/browser/www/cordova* resources/public/
 #find assets -type f >> index.appcache
 #echo "index.js" >> index.appcache
 
-cat src/solsort/apps/bibapp.cljs | sed -e "s/^[^/]/    \0/" | sed -e s'/^ *[;][;] \?//' >> README.md
+cat src/solsort/apps/bibapp.cljs | sed -e "s/^[^/]/    \0/" | sed -e s'/^ *[;][;] \?//' > README.md
