@@ -6,3 +6,4 @@ cordova_plugins.js
 /target/
 report/bibapp.html
 report/bibapp.pdf
+/resources/public/out/

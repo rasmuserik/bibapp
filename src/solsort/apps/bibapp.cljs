@@ -16,8 +16,8 @@
 ;; The source for the report is in `report/`,
 ;; and a pdf-version is prerendered in `bibapp.pdf`
 ;;
-;; *Major restructuring in progress, so it probably will not build at the moment.*
-;; No changes to the functionality of the code, but restructure the order of it,
+;; *Major restructuring in progress, so it currently probably does not work.*
+;; No major changes to the functionality of the code, but restructure the order of it,
 ;; to make it more readable, add documentation, and remove/change a dependency.
 ;;
 ;; The application is written in ClojureScript, using the re-frame framework.
@@ -41,10 +41,77 @@
 
   (:require
     [goog.object]
-    [solsort.util :refer [log <ajax route input <seq<! unique-id log <ajax host route]]
+    [reagent.core :as reagent :refer  []]
+    [solsort.util :refer [<ajax <seq<! unique-id]]
     [re-frame.core :as re-frame :refer  [register-sub subscribe register-handler dispatch dispatch-sync]]
     [clojure.string :as string]
-    [cljs.core.async :refer [>! <! chan put! take! close!]]))
+    [cljs.core.async :refer [>! <! chan put! take! close! timeout]]))
+
+
+;; ## utility Code
+;;
+(defn log [& args]
+  (js/console.log (clj->js args)))
+
+(defn square [a] (* a a))
+;;
+;; ### Input element
+;;
+;; needs debug, just extracted from deprecated library that it depended on
+
+(defn input [& {:keys [type data name value class placeholder style id rows]
+                :or {type "text"
+                     name "missing-name" }}]
+  (let [class  (str "solsort-input solsort-input-" type " " class)
+        parent-id (unique-id)
+        value-key (case type
+                    ("checkbox") "checked"
+                    "value")
+        ]
+    [:span {:id unique-id}
+     [(if (= type "textarea") :textarea :input)
+     {:type type
+             :id (str name "-input")
+             (keyword value-key) @(subscribe [:form-value name])
+             :placeholder placeholder
+             :on-focus #(dispatch [:show-bars false])
+             :on-blur #(go (<! (timeout 300)) (dispatch [:show-bars true]))
+             :rows rows
+             :style style
+             :class class
+             :on-change
+             (fn [e]
+               (dispatch-sync [:form-value name (-> e .-target (aget value-key))])) }]]))
+
+(register-sub :form-value (fn [db [_ s]] (reaction (get-in @db [:form s]))))
+(register-handler :form-value (fn [db [_ s v]]
+                                (assoc-in db [:form s] v)))
+
+;; ### View info
+;;
+
+(defonce initialise
+  (do
+    (js/React.initializeTouchEvents true)
+    (dispatch [:update-viewport])
+    (js/window.addEventListener "load" #(dispatch [:update-viewport]))
+    (js/window.addEventListener "resize" #(dispatch [:update-viewport]))))
+
+(register-sub :view-dimensions
+              (fn  [db _]  (reaction
+                             [(get-in @db  [:viewport :width])
+                              (get-in @db  [:viewport :height])])))
+(register-sub :width  (fn  [db _]  (reaction  (get-in @db  [:viewport :width]))))
+(register-sub :height  (fn  [db _]  (reaction  (get-in @db  [:viewport :height]))))
+
+(register-sub :view (fn  [db _]  (reaction  (get-in @db  [:view]))))
+(register-handler :view (fn  [db [_ view]]  (assoc db :view view)))
+
+(register-handler
+  :update-viewport
+  (fn [db _]
+    (-> db (assoc-in [:viewport :width] js/window.innerWidth)
+        (assoc-in [:viewport :height] js/window.innerHeight))))
 
 
 ;; ## Subscriptions and handlers
@@ -263,7 +330,6 @@
 
 ;; ### Initialise layout / book positions
 ;;
-(defn square [a] (* a a))
 (defn epsilon [] (* 0.00001 (- (js/Math.random) (js/Math.random))))
 (defn set-id [type os]
   (map #(into %1 {:id [type %2] :x (+ (:x %1) (epsilon)) :y (+ (:y %1) (epsilon))})
@@ -415,8 +481,7 @@
                                    (:isbn-cover o)
                                    (<! (<cover-url id)))} ])
           (dispatch [:back-books])))
-    (log 'loaded id)
-    )
+    (log 'loaded id)))
 (defn book-elem
   [o x-step y-step]
   (let [[dx dy] (get o :delta-pos [0 0])
@@ -705,6 +770,8 @@
 
 ;; ### The main view with draggable books: `bibapp`
 ;;
+(def render-count (atom 0))
+(def load-covers (atom true))
 (defn bibapp []
   (let
     [ww @(subscribe [:width])
@@ -727,7 +794,12 @@
                       (if @(subscribe [:show])
                         (str "bibapp/" @(subscribe [:show])    )
                         ("bibapp"))))
-    (dispatch-sync [:step-size [x-step y-step]])
+    (log 'render (swap! render-count inc))
+
+;;
+;; **ERROR** Current version has bug here, so step-size disabled, needs to be fixed for it to work again
+;;
+    ;(dispatch-sync [:step-size [x-step y-step]])
     (if @(subscribe [:coverable])
       (into
         [:div {:on-mouse-move #(pointer-move % %)
@@ -751,9 +823,11 @@
         (map #(book-elem % x-step y-step)
              (map second (seq @(subscribe [:books])))))
       (do
+        (when @load-covers
+          (reset! load-covers false)
         (go
           (dispatch [:coverable (into #{} (get (<! (<ajax "http://solsort.com/db/bib/coverable")) "coverable"))])
-          )
+          ))
         [splash-screen]
         ))))
 
@@ -761,8 +835,7 @@
 ;;
 ;; Deprecated entry point, - TODO stop using route-function.
 ;;
-(route "bib"
-       {:type :html :html
+(reagent/render-component  
         [:div
          {:style
           {:display :inline-block
@@ -771,18 +844,5 @@
            :height "100%"
            :background "black"}
           }
-         [bibapp]
-         ]})
-(route "bibapp"
-       {:type :html :html
-        [:div
-         {:style
-          {:display :inline-block
-           :position :absolute
-           :width "100%"
-           :height "100%"
-           :background "black"}
-          }
-         [bibapp]
-         ]})
-
+         [bibapp]]  
+       js/document.body)
