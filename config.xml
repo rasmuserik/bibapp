@@ -1,25 +1,57 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="solsort.apps.bibapp" version="0.0.2" 
-  xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="solsort.apps.bibapp" version="0.0.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>BibApp</name>
-    <shortdescription>Entry app-prototype competition</shortdescription>
-    <description>...</description>
+    <shortdescription>Biblioteks-inspirationsapp, - find relaterede biblioteksmaterialer</shortdescription>
+    <date>2015-11</date>
+    <description>
+      Dette er en prototype / proof-of-concept, - rettet mod kultur-app idékonkurrence. Kan frit downloades, men forvent ikke in poleret app.
+
+      Det er en biblioteks-inspirations, der anbefaler relatede bøger ud fra hvilke bøger brugeren trækker fra baggrunden af skærmbilledet til forgrunden.
+    </description>
     <author email="app@solsort.com" href="http://solsort.com">solsort.com</author>
-    <icon src="www/assets/icon.png" />
-    <content src="www/index.html" />
+
+    <icon src="assets/icon.png" />
+    <content src="assets/index.html" />
+    <!--splash src="www/assets/splash.png" /-->
 
     <plugin name="cordova-plugin-whitelist" spec="1" />
     <access origin="*" />
 
-    <preference name="permissions" value="none" /> 
     <preference name="orientation" value="portrait" />
-    <preference name="target-device" value="universal" />
-    <preference name="fullscreen" value="false" />
-    <preference name="prerendered-icon" value="false" />
-    <preference name="ios-statusbarstyle" value="black-opaque" />
-    <preference name="detect-data-types" value="false" />
-    <preference name="exit-on-suspend" value="false" />
+    <preference name="permissions" value="none" /> 
     <preference name="auto-hide-splash-screen" value="true" />
+    <preference name="fullscreen" value="false" />
+    <preference name="DisallowOverscroll" value="false" />
+
+    <!--feature name="http://api.phonegap.com/1.0/network" />
+    <feature name="http://api.phonegap.com/1.0/camera" />
+    <feature name="http://api.phonegap.com/1.0/notification" />
+    <feature name="http://api.phonegap.com/1.0/geolocation" />
+    <feature name="http://api.phonegap.com/1.0/media" />
+    <feature name="http://api.phonegap.com/1.0/contacts" />
+    <feature name="http://api.phonegap.com/1.0/file" />
+    <feature name="http://api.phonegap.com/1.0/battery" />
+    <feature name="http://api.phonegap.com/1.0/device" /-->
+
+ 
+    <engine name="android" />
+    <platform name="android">
+       <preference name="android-installLocation" value="internalOnly" /> 
+       <!--preference name="android-windowSoftInputMode" value="stateVisible|adjustResize" /--> 
+    </platform>
+
+    <!--engine name="ios" />
+    <platform name="ios">
+        <preference name="target-device" value="universal" />
+        <preference name="prerendered-icon" value="false" />
+        <preference name="ios-statusbarstyle" value="black-opaque" />
+        <preference name="detect-data-types" value="false" />
+        <preference name="exit-on-suspend" value="false" />
+        <preference name="deployment-target" value="7.0" />
+    </platform-->
+
+    <engine name="browser" />
+    <engine name="ubuntu" />
 
     <!--
     <allow-intent href="http://*/*" />
@@ -28,16 +60,11 @@
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
-
-    <platform name="android">
-        <allow-intent href="market:*" />
-    </platform>
-    <platform name="ios">
+    ios:
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
-    </platform>
+    android:
+        <allow-intent href="market:*" />
 
-    <engine name="android" spec="~4.1.1" />
-    <engine name="browser" spec="~4.0.0" />
     -->
 </widget>
