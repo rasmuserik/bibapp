@@ -10,7 +10,7 @@
     </description>
     <author email="app@solsort.com" href="http://solsort.com">solsort.com</author>
 
-    <icon src="assets/icon.png" />
+    <icon src="icon.png" />
     <content src="assets/index.html" />
     <!--splash src="www/assets/splash.png" /-->
 
