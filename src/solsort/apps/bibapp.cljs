@@ -70,18 +70,18 @@
         ]
     [:span {:id unique-id}
      [(if (= type "textarea") :textarea :input)
-     {:type type
-             :id (str name "-input")
-             (keyword value-key) @(subscribe [:form-value name])
-             :placeholder placeholder
-             :on-focus #(dispatch [:show-bars false])
-             :on-blur #(go (<! (timeout 300)) (dispatch [:show-bars true]))
-             :rows rows
-             :style style
-             :class class
-             :on-change
-             (fn [e]
-               (dispatch-sync [:form-value name (-> e .-target (aget value-key))])) }]]))
+      {:type type
+       :id (str name "-input")
+       (keyword value-key) @(subscribe [:form-value name])
+       :placeholder placeholder
+       :on-focus #(dispatch [:show-bars false])
+       :on-blur #(go (<! (timeout 300)) (dispatch [:show-bars true]))
+       :rows rows
+       :style style
+       :class class
+       :on-change
+       (fn [e]
+         (dispatch-sync [:form-value name (-> e .-target (aget value-key))])) }]]))
 
 (register-sub :form-value (fn [db [_ s]] (reaction (get-in @db [:form s]))))
 (register-handler :form-value (fn [db [_ s v]]
@@ -94,6 +94,8 @@
   (do
     (js/React.initializeTouchEvents true)
     (dispatch [:update-viewport])
+    (dispatch [:show])
+    (js/window.addEventListener "hashchange" #(dispatch [:show]))
     (js/window.addEventListener "load" #(dispatch [:update-viewport]))
     (js/window.addEventListener "resize" #(dispatch [:update-viewport]))))
 
@@ -136,10 +138,31 @@
 (register-handler :coverable (fn [db [_ coverable]] (assoc db :coverable coverable)))
 
 (register-sub :show (fn [db] (reaction (get @db :show))))
-(register-handler :show (fn [db [_ show]] (assoc db :show show)))
+(register-handler 
+  :show (fn [db [_]] 
+          (assoc db :show 
+                 (if (< 1 (.-length js/window.location.hash))
+                  (.slice js/window.location.hash 1)
+                  nil))))
 
-(register-sub :step-size (fn [db] (reaction (get @db :step-size))))
-(register-handler :step-size (fn [db [_ step-size]] (assoc db :step-size step-size)))
+(def header-space 2)
+(def view-width 16)
+(def view-height (+ header-space 18))
+
+(register-sub :step-size (fn [db] (reaction
+                                    (let
+                                      [ww @(subscribe [:width])
+                                       wh @(subscribe [:height])
+                                       xy-ratio (-> (/ (/ wh view-height) (/ ww view-width))
+                                                    (js/Math.min 1.6)
+                                                    (js/Math.max 1.3))
+                                       x-step (js/Math.min
+                                                (/ ww view-width)
+                                                (/ wh view-height xy-ratio))
+                                       y-step (* xy-ratio x-step)]
+                                      [x-step y-step]
+                                      ))))
+
 
 (register-sub
   :ting
@@ -205,6 +228,7 @@
                   nearest
                   nil)
         db (assoc-in db [:books oid] (assoc (pos-obj db oid) :ting (:ting book)))]
+    (log 'release x y)
     (cond
       overlap
       (-> db
@@ -214,7 +238,7 @@
       (and (> 100 (+ (* dx dx) (* dy dy)))
            (> 1500 (- (js/Date.now) (get-in db [:pointer :start-time]))))
       (do
-        (aset js/location "hash" (str "#solsort:bib/bibapp/" (get-in db  [:books oid :ting])))
+        (aset js/location "hash" (str "#" (get-in db  [:books oid :ting])))
         db)
 
       :else db)))
@@ -230,7 +254,7 @@
             [x y] (get-in db [:pointer :pos])
             x (- x (.-offsetLeft js/bibappcontainer))
             y (- y (.-offsetTop js/bibappcontainer))
-            [x-step y-step] (get db :step-size [1 1])
+            [x-step y-step] @(subscribe [:step-size])
             [x y] [(/ x x-step) (/ y y-step)]
             db (assoc-in db [:pointer :down] false)]
         (if book
@@ -243,7 +267,7 @@
   :pointer-down
   (fn [db [_ oid x y]]
     (if (get db :show)
-      (do (aset js/location "hash" "#solsort:bib/bibapp") db)
+      (do (aset js/location "hash" "") db)
       (let [book  (get-in db  [:books oid])]
         (-> db
             (assoc-in [:pointer :start-time] (js/Date.now))
@@ -277,9 +301,6 @@
 
 ;; ## Initialisation
 (def background-color "black")
-(def header-space 2)
-(def view-width 16)
-(def view-height (+ header-space 18))
 (def widget-height (- view-height header-space 2.5))
 ;; ### Sample library object ids
 ;; These are used for populating the initial view,
@@ -412,12 +433,12 @@
 
 (defn <search [s] ; ####
   (go (map #(% "_id")
-           (get-in (<! (<ajax (str "http://solsort.com/es/bibapp/ting/_search?q=" s) :credentials (not (= js/location.host "solsort.com"))))
+           (get-in (<! (<ajax (str "https://solsort.com/es/bibapp/ting/_search?q=" s) :credentials (not (= js/location.host "solsort.com"))))
                    ["hits" "hits"]))))
 ;(go (log (<! (<search "harry potter"))))
 
 (defn <info [id] ; ####
-  (go (let [o (<! (<ajax (str "http://solsort.com/db/bib/" id)))]
+  (go (let [o (<! (<ajax (str "https://solsort.com/db/bib/" id)))]
         (if-not o {}
           {:title (first (o "title"))
            :description (first (o "description"))
@@ -531,6 +552,26 @@
 ;;
 (defn bibapp-header [x-step y-step]
   [:div
+   [:span 
+    {
+     :style {:display :inline-block
+             :width "90%"
+             :text-align "center"
+             :background "black"
+             :font-size (* 0.8 y-step)
+             ;:float "right"
+             :padding-top (* .15 y-step)
+             :padding-bottom (* .25 y-step)
+             :padding-left 0
+             :padding-right 0
+             :margin (* .20 y-step)
+             :border "2px solid black"
+             :border-radius (* .2 y-step)
+             }  
+     
+     }
+   "search-field currently unavailable"
+   ]
    [:input
     {:type "submit"
      :on-mouse-down search
@@ -776,30 +817,10 @@
   (let
     [ww @(subscribe [:width])
      wh @(subscribe [:height])
-     xy-ratio (-> (/ (/ wh view-height) (/ ww view-width))
-                  (js/Math.min 1.6)
-                  (js/Math.max 1.3))
-     x-step (js/Math.min
-              (/ ww view-width)
-              (/ wh view-height xy-ratio))
-     y-step (* xy-ratio x-step)]
-    #_(aset js/location "hash"
-            (str "#solsort:bib/bibapp"
-                 (if @(subscribe [:show])
-                   (str "/" @(subscribe [:show]))
-                   "")))
-    #_(aset js/location "hash"
-            (.replace js/location.hash
-                      #"bibapp.*"
-                      (if @(subscribe [:show])
-                        (str "bibapp/" @(subscribe [:show])    )
-                        ("bibapp"))))
+     [x-step y-step] @(subscribe [:step-size]) ]
     (log 'render (swap! render-count inc))
 
-;;
-;; **ERROR** Current version has bug here, so step-size disabled, needs to be fixed for it to work again
-;;
-    ;(dispatch-sync [:step-size [x-step y-step]])
+    (log :step-size x-step y-step)
     (if @(subscribe [:coverable])
       (into
         [:div {:on-mouse-move #(pointer-move % %)
@@ -825,24 +846,24 @@
       (do
         (when @load-covers
           (reset! load-covers false)
-        (go
-          (dispatch [:coverable (into #{} (get (<! (<ajax "http://solsort.com/db/bib/coverable")) "coverable"))])
-          ))
+          (go
+            (dispatch [:coverable (into #{} (get (<! (<ajax "https://solsort.com/db/bib/coverable")) "coverable"))])
+            ))
         [splash-screen]
         ))))
 
-;; ## Routes
-;;
-;; Deprecated entry point, - TODO stop using route-function.
+;; ## Entry point
 ;;
 (reagent/render-component  
-        [:div
-         {:style
-          {:display :inline-block
-           :position :absolute
-           :width "100%"
-           :height "100%"
-           :background "black"}
-          }
-         [bibapp]]  
-       js/document.body)
+  [:div
+   {:style
+    {:display :inline-block
+     :position :absolute
+     :top 0
+     :left 0
+     :width "100%"
+     :height "100%"
+     :background "black"}
+    }
+   [bibapp]]  
+  js/document.body)
